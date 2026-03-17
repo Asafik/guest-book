@@ -18,6 +18,9 @@ class SettingSeeder extends Seeder
             'description'       => 'Sistem buku tamu digital Jember Command Center untuk mencatat dan mengelola data kunjungan tamu.',
             'logo'              => 'setting/jcc.png',
             'favicon'           => 'setting/jcc.png',
+            'qr_url'            => 'http://192.168.1.8:8000/beranda',
+            'qr_path'           => null,
+            'scan_count'        => 0,
         ]);
     }
 }

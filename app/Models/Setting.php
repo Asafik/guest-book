@@ -17,5 +17,8 @@ class Setting extends Model
         'description',
         'logo',
         'favicon',
+        'qr_url',
+        'qr_path',
+        'scan_count',
     ];
 }

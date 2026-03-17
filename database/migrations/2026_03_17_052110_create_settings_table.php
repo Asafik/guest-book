@@ -18,6 +18,9 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('logo')->nullable();
             $table->string('favicon')->nullable();
+            $table->string('qr_url')->nullable()->default('/');
+            $table->string('qr_path')->nullable();
+            $table->integer('scan_count')->default(0);
             $table->timestamps();
         });
     }

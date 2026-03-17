@@ -24,13 +24,19 @@ class SettingController extends Controller
             'year'              => 'required|string|max:10',
             'address'           => 'nullable|string',
             'description'       => 'nullable|string',
+            'qr_url'            => 'nullable|string|max:500',
             'logo'              => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'favicon'           => 'nullable|mimes:jpg,jpeg,png,ico|max:1024',
         ]);
 
-        $data    = $request->only([
-            'app_name', 'institution_name', 'institution_short',
-            'year', 'address', 'description'
+        $data = $request->only([
+            'app_name',
+            'institution_name',
+            'institution_short',
+            'year',
+            'address',
+            'description',
+            'qr_url'
         ]);
 
         $setting = Setting::first();
