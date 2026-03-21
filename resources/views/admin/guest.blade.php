@@ -18,6 +18,14 @@
             <i class="fas fa-list-alt"></i>
             <h4>Daftar Kunjungan</h4>
           </div>
+          <div class="header-actions">
+            <button type="button" class="btn-export excel" onclick="exportData('excel')">
+              <i class="fas fa-file-excel"></i> Export Excel
+            </button>
+            <button type="button" class="btn-export pdf" onclick="exportData('pdf')">
+              <i class="fas fa-file-pdf"></i> Export PDF
+            </button>
+          </div>
         </div>
 
         <div class="table-toolbar">
@@ -309,6 +317,50 @@
   .table-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .table-title i { color: var(--pink); flex-shrink: 0; }
   .table-title h4 { font-size: 15px; font-weight: 600; color: var(--dark); white-space: nowrap; }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-export.excel {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+  }
+
+  .btn-export.excel:hover {
+    background: #10b981;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  }
+
+  .btn-export.pdf {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .btn-export.pdf:hover {
+    background: #ef4444;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  }
 
   .table-toolbar {
     display: flex;
@@ -780,6 +832,9 @@
   @media (max-width: 560px) {
     .content { padding: 12px; }
     .table-card { padding: 14px; border-radius: 16px; }
+    .table-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .header-actions { width: 100%; display: flex; gap: 8px; }
+    .btn-export { flex: 1; justify-content: center; }
     .table-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
     .toolbar-left { justify-content: flex-start; }
     .toolbar-right { justify-content: stretch; }
@@ -823,6 +878,28 @@
     url.searchParams.set('search', q);
     url.searchParams.delete('page');
     window.location.href = url.toString();
+  }
+
+  function exportData(type) {
+    showLoading('Memproses ekspor...');
+    const url = new URL(window.location.href);
+    if (type === 'excel') {
+      url.pathname = '/guests/export/excel';
+    } else {
+      url.pathname = '/guests/export/pdf';
+    }
+    
+    // Use the backend routes we defined, maintaining search params
+    const baseUrl = '{{ url("") }}';
+    const finalUrl = baseUrl + url.pathname + url.search;
+    
+    window.location.href = finalUrl;
+
+    // Sembunyikan loading dan tampilkan toast setelah beberapa saat
+    setTimeout(() => {
+      hideLoading();
+      showToast('Berhasil mengekspor ' + type.toUpperCase() + '!', 'success');
+    }, 2000);
   }
 
   function doSort(column) {

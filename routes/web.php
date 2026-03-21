@@ -27,6 +27,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard',  [DashboardController::class, 'index'])->name('admin.dashboard');
 
     Route::get('/guests',         [GuestController::class, 'index'])->name('admin.guests');
+    Route::get('/guests/export/excel', [GuestController::class, 'exportExcel'])->name('admin.guests.export.excel');
+    Route::get('/guests/export/pdf',   [GuestController::class, 'exportPdf'])->name('admin.guests.export.pdf');
     Route::delete('/guests/{id}', [GuestController::class, 'destroy'])->name('admin.guests.destroy');
 
     Route::get('/users',          [UserController::class, 'index'])->name('admin.users');
