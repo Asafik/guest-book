@@ -28,7 +28,8 @@ class LoginController extends Controller
 
             // Dapatkan nama user untuk pesan yang lebih personal
             $userName = Auth::user()->name;
-            $greeting = now()->format('H') < 12 ? 'Selamat pagi' : (now()->format('H') < 15 ? 'Selamat siang' : 'Selamat sore');
+            $hour = now()->timezone('Asia/Jakarta')->format('H');
+            $greeting = $hour < 12 ? 'Selamat pagi' : ($hour < 15 ? 'Selamat siang' : ($hour < 18 ? 'Selamat sore' : 'Selamat malam'));
 
             return redirect()->intended('/dashboard')
                 ->with('login_success', true)
