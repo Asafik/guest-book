@@ -21,10 +21,10 @@ class SettingController extends Controller
             'app_name'          => 'required|string|max:255',
             'institution_name'  => 'required|string|max:255',
             'institution_short' => 'required|string|max:20',
-            'year'              => 'required|string|max:10',
+            'year'              => 'required|integer',
             'address'           => 'nullable|string',
             'description'       => 'nullable|string',
-            'qr_url'            => 'nullable|string|max:500',
+            'qr_path'           => 'nullable|string|max:255',
             'logo'              => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'favicon'           => 'nullable|mimes:jpg,jpeg,png,ico|max:1024',
         ]);
@@ -36,7 +36,7 @@ class SettingController extends Controller
             'year',
             'address',
             'description',
-            'qr_url'
+            'qr_path',
         ]);
 
         $setting = Setting::first();
@@ -58,6 +58,7 @@ class SettingController extends Controller
         if ($setting) {
             $setting->update($data);
         } else {
+            $data['scan_count'] = 0;
             Setting::create($data);
         }
 

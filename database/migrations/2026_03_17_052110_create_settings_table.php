@@ -10,17 +10,16 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->string('app_name')->default('Buku Tamu Digital');
-            $table->string('institution_name')->default('Jember Command Center');
-            $table->string('institution_short')->default('JCC');
-            $table->string('year')->default('2026');
+            $table->string('app_name')->nullable();
+            $table->string('institution_name')->nullable();
+            $table->string('institution_short')->nullable();
+            $table->unsignedSmallInteger('year')->nullable();
             $table->text('address')->nullable();
             $table->text('description')->nullable();
             $table->string('logo')->nullable();
             $table->string('favicon')->nullable();
-            $table->string('qr_url')->nullable()->default('/');
             $table->string('qr_path')->nullable();
-            $table->integer('scan_count')->default(0);
+            $table->unsignedBigInteger('scan_count')->default(0);
             $table->timestamps();
         });
     }

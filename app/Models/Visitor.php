@@ -10,11 +10,11 @@ class Visitor extends Model
 
     protected $fillable = [
         'full_name',
+        'address',
         'institution',
         'phone_number',
         'purpose',
         'meet_with',
         'notes',
-        'photo',
     ];
 }

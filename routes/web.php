@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\SettingController;
 Route::get('/beranda', [HomeController::class, 'index'])->name('beranda');
 Route::get('/formulir', [VisitorController::class, 'index']);
 Route::post('/formulir', [VisitorController::class, 'store']);
+Route::post('/formulir/ocr-ktp', [VisitorController::class, 'ocrKtp']);
 
 // ===== AUTH =====
 Route::middleware('guest')->group(function () {

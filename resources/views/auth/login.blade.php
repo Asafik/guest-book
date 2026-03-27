@@ -38,7 +38,7 @@
         <div class="input-wrap">
           <i class="fas fa-envelope"></i>
           <input type="email" name="email"
-            placeholder="admin@jcc.go.id"
+            placeholder="Masukan Email"
             value="{{ old('email') }}"
             required autofocus>
         </div>

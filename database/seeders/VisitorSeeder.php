@@ -19,12 +19,12 @@ class VisitorSeeder extends Seeder
 
             Visitor::create([
                 'full_name'    => $faker->name(),
+                'address'      => $faker->address(),
                 'institution'  => $faker->company(),
                 'phone_number' => '08' . $faker->numerify('#########'),
                 'purpose'      => $purpose,
                 'meet_with'    => $purpose === 'visit' ? $faker->name() : null,
                 'notes'        => $faker->optional(0.5)->sentence(),
-                'photo'        => null,
                 'created_at'   => $faker->dateTimeBetween('-3 months', 'now'),
                 'updated_at'   => now(),
             ]);

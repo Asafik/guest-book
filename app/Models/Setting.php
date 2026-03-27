@@ -17,8 +17,12 @@ class Setting extends Model
         'description',
         'logo',
         'favicon',
-        'qr_url',
         'qr_path',
         'scan_count',
+    ];
+
+    protected $casts = [
+        'year' => 'integer',
+        'scan_count' => 'integer',
     ];
 }

@@ -106,36 +106,34 @@
           </div>
 
           <div class="divider">
-            <span>URL & QR Code</span>
+            <span>Path & QR Code</span>
           </div>
 
           <div class="url-barcode-wrapper">
-            {{-- Input URL --}}
             <div class="form-group" style="margin-bottom:0">
-              <label>URL QR Code</label>
+              <label>Path QR Code</label>
               <div class="url-input-wrap">
                 <span class="url-prefix-icon"><i class="fas fa-link"></i></span>
-                <input type="url" id="qrUrl"
-                  value="{{ $setting ? $setting->qr_url : '' }}"
-                  placeholder="https://contoh.com"
-                  oninput="generateBarcode(this.value)">
-                <button type="button" class="url-clear-btn" onclick="clearUrl()" title="Hapus URL">
+                <input type="text" id="qrPath"
+                  value="{{ $setting ? $setting->qr_path : '' }}"
+                  placeholder="/formulir"
+                  oninput="generateBarcodeFromPath(this.value)">
+                <button type="button" class="url-clear-btn" onclick="clearPath()" title="Hapus Path">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
               <p class="url-hint">
                 <i class="fas fa-info-circle"></i>
-                URL ini akan digunakan sebagai konten QR Code instansi.
+                Isi dengan path seperti <strong>/formulir</strong> atau <strong>/beranda</strong>. Domain, IP, dan protocol akan mengikuti aplikasi yang sedang aktif.
               </p>
             </div>
 
-            {{-- Preview QR --}}
             <div class="barcode-card" id="barcodeCard">
               <div class="barcode-empty" id="barcodeEmpty">
                 <div class="barcode-empty-icon">
                   <i class="fas fa-qrcode"></i>
                 </div>
-                <p>Masukkan URL untuk<br>menampilkan QR Code</p>
+                <p>Masukkan path untuk<br>menampilkan QR Code</p>
               </div>
 
               <div class="barcode-result" id="barcodeResult" style="display:none">
@@ -318,13 +316,22 @@
 
   let barcodeDebounce = null;
 
-  function isValidUrl(value) {
-    try {
-      const url = new URL(value);
-      return ['http:', 'https:'].includes(url.protocol);
-    } catch (e) {
-      return false;
-    }
+  function normalizePath(path) {
+    const clean = (path || '').trim();
+    if (!clean) return '';
+    return clean.startsWith('/') ? clean : '/' + clean;
+  }
+
+  function buildFullUrlFromPath(path) {
+    const normalizedPath = normalizePath(path);
+    if (!normalizedPath) return '';
+    return window.location.origin + normalizedPath;
+  }
+
+  function isValidPath(path) {
+    const clean = (path || '').trim();
+    if (!clean) return false;
+    return !clean.includes(' ');
   }
 
   function setBarcodeEmptyState() {
@@ -385,7 +392,7 @@
     });
   }
 
-  function generateBarcode(url) {
+  function generateBarcodeFromPath(path) {
     clearTimeout(barcodeDebounce);
 
     barcodeDebounce = setTimeout(() => {
@@ -393,10 +400,9 @@
       const result = document.getElementById('barcodeResult');
       const card = document.getElementById('barcodeCard');
       const label = document.getElementById('barcodeUrlLabel');
+      const cleanPath = (path || '').trim();
 
-      const cleanUrl = (url || '').trim();
-
-      if (!cleanUrl) {
+      if (!cleanPath) {
         setBarcodeEmptyState();
         return;
       }
@@ -404,9 +410,9 @@
       empty.style.display = 'none';
       result.style.display = 'flex';
       card.classList.add('has-barcode');
-      label.textContent = cleanUrl;
 
-      if (!isValidUrl(cleanUrl)) {
+      if (!isValidPath(cleanPath)) {
+        label.textContent = cleanPath;
         document.getElementById('qrCanvas').innerHTML = `
           <div style="
             width:190px;
@@ -423,18 +429,21 @@
             border-radius:12px;
             box-sizing:border-box;
           ">
-            URL tidak valid.<br>Gunakan format http:// atau https://
+            Path tidak valid.<br>Contoh: /formulir
           </div>
         `;
         return;
       }
 
+      const fullUrl = buildFullUrlFromPath(cleanPath);
+      label.textContent = fullUrl;
+
       try {
-        renderQrToPreview(cleanUrl);
+        renderQrToPreview(fullUrl);
       } catch (e) {
         document.getElementById('qrCanvas').innerHTML = `
           <img
-            src="https://api.qrserver.com/v1/create-qr-code/?size=190x190&margin=10&data=${encodeURIComponent(cleanUrl)}"
+            src="https://api.qrserver.com/v1/create-qr-code/?size=190x190&margin=10&data=${encodeURIComponent(fullUrl)}"
             width="190"
             height="190"
             alt="QR Code">
@@ -443,35 +452,47 @@
     }, 250);
   }
 
-  function clearUrl() {
-    document.getElementById('qrUrl').value = '';
+  function clearPath() {
+    document.getElementById('qrPath').value = '';
     setBarcodeEmptyState();
   }
 
   function downloadBarcode() {
-    const url = document.getElementById('qrUrl').value.trim();
+    const path = document.getElementById('qrPath').value.trim();
 
-    if (!url) { alert('URL QR Code masih kosong.'); return; }
-    if (!isValidUrl(url)) { alert('URL tidak valid. Gunakan format http:// atau https://'); return; }
+    if (!path) {
+      alert('Path QR Code masih kosong.');
+      return;
+    }
+
+    if (!isValidPath(path)) {
+      alert('Path tidak valid. Contoh: /formulir');
+      return;
+    }
+
+    const fullUrl = buildFullUrlFromPath(path);
 
     try {
-      const dataUrl = createQrCanvasData(url, 1000);
-      if (!dataUrl) { alert('QR Code gagal dibuat.'); return; }
+      const dataUrl = createQrCanvasData(fullUrl, 1000);
+      if (!dataUrl) {
+        alert('QR Code gagal dibuat.');
+        return;
+      }
 
       const link = document.createElement('a');
       link.download = 'qrcode-instansi.png';
       link.href = dataUrl;
       link.click();
     } catch (e) {
-      const fallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&margin=40&data=${encodeURIComponent(url)}`;
+      const fallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&margin=40&data=${encodeURIComponent(fullUrl)}`;
       window.open(fallbackUrl, '_blank');
     }
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    const existingUrl = document.getElementById('qrUrl').value.trim();
-    if (existingUrl) {
-      generateBarcode(existingUrl);
+    const existingPath = document.getElementById('qrPath').value.trim();
+    if (existingPath) {
+      generateBarcodeFromPath(existingPath);
     } else {
       setBarcodeEmptyState();
     }
@@ -484,12 +505,14 @@
     year: 'Tahun',
     address: 'Alamat Instansi',
     description: 'Deskripsi Aplikasi',
-    qr_url: 'URL QR Code',
+    qr_path: 'Path QR Code',
     logo: 'Logo Aplikasi',
     favicon: 'Favicon',
   };
 
   function getFormValues() {
+    const path = document.getElementById('qrPath').value.trim();
+
     return {
       app_name: document.getElementById('appName').value.trim(),
       institution_name: document.getElementById('institutionName').value.trim(),
@@ -497,7 +520,7 @@
       year: document.getElementById('year').value.trim(),
       address: document.getElementById('address').value.trim(),
       description: document.getElementById('description').value.trim(),
-      qr_url: document.getElementById('qrUrl').value.trim(),
+      qr_path: path,
       logo: document.getElementById('logoInput').files[0]
         ? document.getElementById('logoInput').files[0].name
         : '(tidak diubah)',
@@ -515,8 +538,8 @@
       return;
     }
 
-    if (values.qr_url && !isValidUrl(values.qr_url)) {
-      alert('URL QR Code tidak valid. Gunakan format http:// atau https://');
+    if (values.qr_path && !isValidPath(values.qr_path)) {
+      alert('Path QR Code tidak valid. Contoh: /formulir');
       return;
     }
 
@@ -547,6 +570,8 @@
     btnSave.disabled = true;
     closeConfirm();
 
+    const qrPath = normalizePath(document.getElementById('qrPath').value.trim());
+
     const formData = new FormData();
     formData.append('app_name', document.getElementById('appName').value.trim());
     formData.append('institution_name', document.getElementById('institutionName').value.trim());
@@ -554,7 +579,7 @@
     formData.append('year', document.getElementById('year').value.trim());
     formData.append('address', document.getElementById('address').value.trim());
     formData.append('description', document.getElementById('description').value.trim());
-    formData.append('qr_url', document.getElementById('qrUrl').value.trim());
+    formData.append('qr_path', qrPath);
     formData.append('_method', 'PUT');
 
     const logoFile = document.getElementById('logoInput').files[0];

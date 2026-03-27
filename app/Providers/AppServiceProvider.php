@@ -21,6 +21,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // 1. Tambahkan baris ini untuk memaksa HTTPS saat pakai Ngrok
+        if (str_contains(request()->header('host'), 'ngrok-free.dev')) {
+            \URL::forceScheme('https');
+        }
+
+        // 2. Kode Anda yang sudah ada
         $globalSetting = Setting::first();
         View::share('globalSetting', $globalSetting);
     }
