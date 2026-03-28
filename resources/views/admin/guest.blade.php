@@ -139,7 +139,11 @@
 
                                     <td>
                                         <div class="guest-name">
-                                            <div class="guest-avatar">{{ $initials }}</div>
+                                            @if($guest->photo)
+                                                <img src="{{ asset('storage/' . $guest->photo) }}" alt="Foto" class="guest-avatar" style="object-fit: cover;">
+                                            @else
+                                                <div class="guest-avatar">{{ $initials }}</div>
+                                            @endif
                                             <div class="guest-info">
                                                 <span class="guest-fullname">{{ $guest->full_name }}</span>
                                                 <span class="guest-sub-mobile">{{ $guest->institution ?? '-' }}</span>
@@ -161,6 +165,7 @@
                                                 title="Lihat Detail"
                                                 data-name="{{ $guest->full_name }}"
                                                 data-initials="{{ $initials }}"
+                                                data-photo="{{ $guest->photo ? asset('storage/' . $guest->photo) : '' }}"
                                                 data-address="{{ $guest->address ?? '-' }}"
                                                 data-institution="{{ $guest->institution ?? '-' }}"
                                                 data-phone="{{ $guest->phone_number ?? '-' }}"
@@ -252,7 +257,7 @@
         </div>
 
         <div class="detail-body">
-            <div class="detail-avatar-large-wrap">
+            <div class="detail-avatar-large-wrap" id="detailAvatarContainer">
                 <div class="detail-avatar-large" id="detailInitials">-</div>
             </div>
 
@@ -320,6 +325,12 @@
             <button class="btn-confirm-delete" onclick="doDelete()">Ya, Hapus</button>
         </div>
     </div>
+</div>
+
+<!-- Modal Preview Foto Full -->
+<div id="previewFullOverlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 999999; align-items: center; justify-content: center; padding: 20px;">
+    <button type="button" onclick="closePreviewFull()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; transition: 0.2s;"><i class="fas fa-times"></i></button>
+    <img id="previewFullImg" src="" alt="Preview Full" style="max-width: 100%; max-height: 90vh; border-radius: 8px; object-fit: contain;">
 </div>
 
 <!-- Loading Overlay -->
@@ -440,7 +451,15 @@
     });
 
     function showDetail(btn) {
-    document.getElementById('detailInitials').textContent = btn.dataset.initials || '-';
+    const photoUrl = btn.dataset.photo;
+    const container = document.getElementById('detailAvatarContainer');
+    
+    if (photoUrl) {
+        container.innerHTML = `<img src="${photoUrl}" alt="Foto" class="detail-avatar-large" style="object-fit: cover; width: 90px; height: 90px; border-radius: 50%; cursor: pointer;" onclick="openPreviewFull('${photoUrl}')" title="Klik untuk lihat foto layar penuh">`;
+    } else {
+        container.innerHTML = `<div class="detail-avatar-large" id="detailInitials">${btn.dataset.initials || '-'}</div>`;
+    }
+
     document.getElementById('detailName').textContent = btn.dataset.name || '-';
     document.getElementById('detailAddress').textContent = btn.dataset.address || '-';
     document.getElementById('detailInstitution').textContent = btn.dataset.institution || '-';
@@ -548,5 +567,25 @@
             showToast(error.message || 'Terjadi kesalahan.', 'error');
         });
     }
+
+    function openPreviewFull(url) {
+        const overlay = document.getElementById('previewFullOverlay');
+        const img = document.getElementById('previewFullImg');
+        img.src = url;
+        overlay.style.display = 'flex';
+    }
+
+    function closePreviewFull() {
+        const overlay = document.getElementById('previewFullOverlay');
+        const img = document.getElementById('previewFullImg');
+        overlay.style.display = 'none';
+        img.src = '';
+    }
+
+    document.getElementById('previewFullOverlay').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closePreviewFull();
+        }
+    });
 </script>
 @endpush

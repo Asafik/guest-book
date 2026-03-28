@@ -361,26 +361,19 @@
 
                         <div class="upload-group">
                             <div class="upload-label">
-                                <i class="fas fa-id-card" style="color: var(--primary); margin-right: 6px;"></i>
-                                Scan KTP <small>(opsional, isi nama & alamat otomatis)</small>
+                                <i class="fas fa-camera" style="color: var(--primary); margin-right: 6px;"></i>
+                                Ambil Foto <small>( Selfie / Scan KTP)</small>
                             </div>
 
-                            <div class="upload-area" id="uploadArea">
-                                <div class="upload-content" id="uploadContent">
-                                    <i class="fas fa-camera"></i>
-                                    <div class="upload-text">Klik untuk buka kamera</div>
-                                    <div class="upload-hint">
-                                        <i class="fas fa-mobile-alt"></i> Kamera web di halaman
-                                    </div>
-                                    <small style="display:block; margin-top:8px; color:var(--text-muted);">
-                                        Kamera akan terbuka di halaman web, lalu scan KTP otomatis.
-                                    </small>
-                                </div>
+                            <button type="button" class="btn-submit" id="btnOpenPhotoChoice" style="background: rgba(255, 103, 154, 0.1); color: var(--primary); border: 2px dashed rgba(255, 103, 154, 0.4); box-shadow: none; margin-bottom: 5px; margin-top: 10px; width: 100%; padding: 16px; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <i class="fas fa-camera"></i> Ambil Foto / Scan KTP
+                            </button>
 
-                                <div class="upload-preview" id="uploadPreview">
-                                    <img src="" alt="Preview KTP" id="previewImage">
-                                    <div class="preview-ktp-frame"></div>
-                                    <div class="preview-ktp-label">Preview Foto KTP</div>
+                            <div class="upload-area" id="uploadArea" style="display: none; border: none; padding: 0; background: transparent; cursor: default;">
+                                <div class="upload-preview" id="uploadPreview" style="margin-top: 0; border: 2px solid rgba(255, 255, 255, 0.1);">
+                                    <img src="" alt="Preview" id="previewImage">
+                                    <div class="preview-ktp-frame" id="previewFrame"></div>
+                                    <div class="preview-ktp-label" id="previewLabel">Preview Foto</div>
                                     <button type="button" class="remove-photo" id="removePhoto">
                                         <i class="fas fa-times"></i>
                                     </button>
@@ -422,6 +415,13 @@
                                 <option value="visit">Berkunjung</option>
                                 <option value="other">Lainnya</option>
                             </select>
+                        </div>
+
+                        <div class="hidden-input" id="purposeOtherInput">
+                            <div class="form-group">
+                                <label for="purpose_other">Tujuan Lainnya</label>
+                                <input type="text" id="purpose_other" placeholder="Tuliskan tujuan kunjungan Anda">
+                            </div>
                         </div>
 
                         <div class="hidden-input" id="meetWithInput">
@@ -491,6 +491,26 @@
         </div>
     </div>
 
+    <div class="modal" id="photoChoiceModal">
+        <div class="modal-content">
+            <h3>Pilih Metode Foto</h3>
+            <p>Silakan pilih cara untuk mengambil foto Anda</p>
+            <div class="modal-options">
+                <div class="modal-option" id="btnChoiceSelfie">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Foto Selfie</span>
+                    <small>Ambil foto wajah Anda</small>
+                </div>
+                <div class="modal-option" id="btnChoiceKtp">
+                    <i class="fas fa-id-card"></i>
+                    <span>Scan KTP</span>
+                    <small>Otomatis isi form</small>
+                </div>
+            </div>
+            <button class="modal-close" id="btnCloseChoiceModal" type="button">Batal</button>
+        </div>
+    </div>
+
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-box">
             <div class="loading-spinner"></div>
@@ -530,11 +550,18 @@
     const purposeSelect = document.getElementById('purpose');
     const meetWithInput = document.getElementById('meetWithInput');
 
+    const btnOpenPhotoChoice = document.getElementById('btnOpenPhotoChoice');
     const uploadArea = document.getElementById('uploadArea');
-    const uploadContent = document.getElementById('uploadContent');
     const uploadPreview = document.getElementById('uploadPreview');
     const previewImage = document.getElementById('previewImage');
     const removePhoto = document.getElementById('removePhoto');
+    const previewFrame = document.getElementById('previewFrame');
+    const previewLabel = document.getElementById('previewLabel');
+
+    const photoChoiceModal = document.getElementById('photoChoiceModal');
+    const btnChoiceSelfie = document.getElementById('btnChoiceSelfie');
+    const btnChoiceKtp = document.getElementById('btnChoiceKtp');
+    const btnCloseChoiceModal = document.getElementById('btnCloseChoiceModal');
 
     const cameraModal = document.getElementById('cameraModal');
     const cameraFeed = document.getElementById('cameraFeed');
@@ -544,6 +571,8 @@
     const switchCamera = document.getElementById('switchCamera');
     const cameraHelperStatus = document.getElementById('cameraHelperStatus');
     const cameraGuideBox = document.getElementById('cameraGuideBox');
+    const cameraTopBar = document.querySelector('.camera-top-bar');
+    const captureNote = document.querySelector('.capture-note');
 
     const loadingOverlay = document.getElementById('loadingOverlay');
     const loadingText = document.getElementById('loadingText');
@@ -561,6 +590,7 @@
     let selectedFile = null;
     let cameraStream = null;
     let currentFacingMode = 'environment';
+    let isSelfieMode = false;
 
     let autoScanInterval = null;
     let isAutoScanning = false;
@@ -573,10 +603,53 @@
         } else {
             meetWithInput.classList.remove('show');
         }
+
+        const purposeOtherInput = document.getElementById('purposeOtherInput');
+        const purposeOtherField = document.getElementById('purpose_other');
+
+        if (this.value === 'other') {
+            purposeOtherInput.classList.add('show');
+            purposeOtherField.name = 'purpose';
+            purposeOtherField.required = true;
+            this.name = '';
+        } else {
+            purposeOtherInput.classList.remove('show');
+            purposeOtherField.name = '';
+            purposeOtherField.required = false;
+            this.name = 'purpose'; 
+        }
     });
 
     btnOk.addEventListener('click', () => {
         successOverlay.classList.remove('show');
+    });
+
+    btnOpenPhotoChoice.addEventListener('click', () => {
+        photoChoiceModal.classList.add('show');
+    });
+
+    btnCloseChoiceModal.addEventListener('click', () => {
+        photoChoiceModal.classList.remove('show');
+    });
+
+    photoChoiceModal.addEventListener('click', (e) => {
+        if (e.target === photoChoiceModal) {
+            photoChoiceModal.classList.remove('show');
+        }
+    });
+
+    btnChoiceSelfie.addEventListener('click', () => {
+        isSelfieMode = true;
+        currentFacingMode = 'user';
+        photoChoiceModal.classList.remove('show');
+        openCamera();
+    });
+
+    btnChoiceKtp.addEventListener('click', () => {
+        isSelfieMode = false;
+        currentFacingMode = 'environment';
+        photoChoiceModal.classList.remove('show');
+        openCamera();
     });
 
     function showOcrStatus(type, message) {
@@ -685,7 +758,8 @@
         selectedFile = null;
         previewImage.src = '';
         uploadPreview.style.display = 'none';
-        uploadContent.style.display = 'block';
+        uploadArea.style.display = 'none';
+        btnOpenPhotoChoice.style.display = 'flex';
         uploadArea.classList.remove('preview-active');
         hideOcrStatus();
         resetAutofilledState();
@@ -758,7 +832,19 @@
             cameraFeed.srcObject = cameraStream;
             updateCameraMirror();
             cameraModal.classList.add('show');
-            setCameraHelper('warn', 'Arahkan KTP ke dalam kotak');
+
+            if (isSelfieMode) {
+                cameraGuideBox.style.display = 'none';
+                cameraTopBar.textContent = 'Arahkan wajah ke kamera untuk selfie.';
+                cameraHelperStatus.style.display = 'none';
+                captureNote.textContent = 'Tekan tombol kamera untuk mengambil foto.';
+            } else {
+                cameraGuideBox.style.display = 'block';
+                cameraTopBar.textContent = 'Arahkan kamera ke KTP. Sistem akan membaca otomatis.';
+                cameraHelperStatus.style.display = 'block';
+                setCameraHelper('warn', 'Arahkan KTP ke dalam kotak');
+                captureNote.textContent = 'Jika scan otomatis belum merespons, tekan tombol kamera.';
+            }
 
             try {
                 await cameraFeed.play();
@@ -766,7 +852,9 @@
                 console.warn('Video play warning:', playError);
             }
 
-            startAutoScan();
+            if (!isSelfieMode) {
+                startAutoScan();
+            }
         } catch (err) {
             console.error('Camera Error:', err);
             alert('Tidak dapat mengakses kamera: ' + err.message);
@@ -1018,9 +1106,12 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     previewImage.src = e.target.result;
-                    uploadContent.style.display = 'none';
+                    btnOpenPhotoChoice.style.display = 'none';
+                    uploadArea.style.display = 'block';
                     uploadPreview.style.display = 'block';
                     uploadArea.classList.add('preview-active');
+                    previewLabel.textContent = 'Preview Foto KTP';
+                    previewFrame.style.display = 'block';
 
                     stopCamera();
 
@@ -1034,11 +1125,8 @@
         }, 1800);
     }
 
-    uploadArea.addEventListener('click', (e) => {
-        if (e.target.closest('.remove-photo')) return;
-        if (selectedFile) return;
-        openCamera();
-    });
+    // Upload Area is no longer clickable for opening camera, we use the button instead
+
 
     closeCamera.addEventListener('click', () => {
         stopCamera();
@@ -1069,21 +1157,31 @@
         const reader = new FileReader();
         reader.onload = async (e) => {
             previewImage.src = e.target.result;
-            uploadContent.style.display = 'none';
+            btnOpenPhotoChoice.style.display = 'none';
+            uploadArea.style.display = 'block';
             uploadPreview.style.display = 'block';
             uploadArea.classList.add('preview-active');
 
             stopCamera();
 
-            const result = await processKtpOcr(file);
-
-            if (hasMinimumOcrData(result)) {
-                applyOcrToInputs(result);
+            if (isSelfieMode) {
+                previewLabel.textContent = 'Preview Selfie';
+                previewFrame.style.display = 'none';
+                hideOcrStatus();
             } else {
-                fullNameInput.value = '';
-                addressInput.value = '';
-                clearAutofilledValues();
-                showOcrStatus('info', 'Nama dan alamat harus terbaca lengkap. Silakan coba lagi.');
+                previewLabel.textContent = 'Preview Foto KTP';
+                previewFrame.style.display = 'block';
+
+                const result = await processKtpOcr(file);
+
+                if (hasMinimumOcrData(result)) {
+                    applyOcrToInputs(result);
+                } else {
+                    fullNameInput.value = '';
+                    addressInput.value = '';
+                    clearAutofilledValues();
+                    showOcrStatus('info', 'Nama dan alamat harus terbaca lengkap. Silakan coba lagi.');
+                }
             }
         };
         reader.readAsDataURL(file);

@@ -9,6 +9,7 @@ class Visitor extends Model
     protected $table = 'visitors';
 
     protected $fillable = [
+        'photo',           // ← tambahkan ini
         'full_name',
         'address',
         'institution',

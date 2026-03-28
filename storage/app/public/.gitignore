@@ -1,5 +1,6 @@
 *
 !.gitignore
-!*.jpg
+!*/
 !*.png
-!*.jpeg file file juga 
+!*.jpg
+!*.jpeg

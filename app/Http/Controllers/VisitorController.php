@@ -16,6 +16,7 @@ class VisitorController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'photo'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'], // tambah ini
             'full_name'    => ['required', 'string', 'max:255'],
             'address'      => ['nullable', 'string'],
             'institution'  => ['nullable', 'string', 'max:255'],
@@ -25,16 +26,22 @@ class VisitorController extends Controller
             'notes'        => ['nullable', 'string'],
         ]);
 
-         Visitor::create([
-             'full_name'    => $validated['full_name'],
-             'address'      => $validated['address'] ?? null,
-             'institution'  => $validated['institution'] ?? null,
-             'phone_number' => $validated['phone_number'] ?? null,
-             'purpose'      => $validated['purpose'],
-             'meet_with'    => $validated['meet_with'] ?? null,
-             'notes'        => $validated['notes'] ?? null,
-         ]);
+        // Proses upload foto
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('visitors', 'public');
+        }
 
+        Visitor::create([
+            'photo'        => $photoPath, // tambah ini
+            'full_name'    => $validated['full_name'],
+            'address'      => $validated['address'] ?? null,
+            'institution'  => $validated['institution'] ?? null,
+            'phone_number' => $validated['phone_number'] ?? null,
+            'purpose'      => $validated['purpose'],
+            'meet_with'    => $validated['meet_with'] ?? null,
+            'notes'        => $validated['notes'] ?? null,
+        ]);
 
         return response()->json([
             'success' => true,
