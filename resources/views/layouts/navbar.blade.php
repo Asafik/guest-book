@@ -1,6 +1,6 @@
 <header class="site-header">
     <div class="container nav-wrap">
-        <a href="/" class="brand">
+        <a href="/beranda" class="brand">
             <div class="brand-logo-img">
                 <img
                     src="{{ $globalSetting && $globalSetting->logo ? asset('storage/'.$globalSetting->logo) : asset('jcc.png') }}"
