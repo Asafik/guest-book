@@ -49,11 +49,7 @@
                         </div>
                     </div>
 
-                    <div class="hero-actions reveal">
-                        <a class="btn btn-primary" href="{{ url('/formulir') }}">
-                            <i class="fas fa-pen"></i> Isi Formulir
-                        </a>
-                    </div>
+                  
                 </div>
 
                <div class="hero-visual reveal">
