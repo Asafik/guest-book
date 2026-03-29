@@ -440,7 +440,7 @@
                         </div>
 
                         <button type="submit" class="btn-submit" id="btnSubmit">
-                            <i class="fas fa-paper-plane"></i> Kirim Pendaftaran
+                            <i class="fas fa-save"></i> Simpan
                         </button>
                     </form>
                 </div>
@@ -524,14 +524,11 @@
             <div class="success-icon">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <h3>Pendaftaran Berhasil!</h3>
+            <h3>Berhasil!</h3>
             <p>
                 <span>Terima kasih telah berkunjung.</span><br><br>
                 Data kunjungan Anda telah kami catat dengan baik.
             </p>
-            <button class="btn-ok" id="btnOk" type="button">
-                <i class="fas fa-check"></i> OK
-            </button>
         </div>
     </div>
 
@@ -579,7 +576,6 @@
     const loadingSubText = document.getElementById('loadingSubText');
 
     const successOverlay = document.getElementById('successOverlay');
-    const btnOk = document.getElementById('btnOk');
     const btnSubmit = document.getElementById('btnSubmit');
 
     const ocrStatus = document.getElementById('ocrStatus');
@@ -616,12 +612,14 @@
             purposeOtherInput.classList.remove('show');
             purposeOtherField.name = '';
             purposeOtherField.required = false;
-            this.name = 'purpose'; 
+            this.name = 'purpose';
         }
     });
 
-    btnOk.addEventListener('click', () => {
-        successOverlay.classList.remove('show');
+    successOverlay.addEventListener('click', (e) => {
+        if (e.target === successOverlay) {
+            successOverlay.classList.remove('show');
+        }
     });
 
     btnOpenPhotoChoice.addEventListener('click', () => {
